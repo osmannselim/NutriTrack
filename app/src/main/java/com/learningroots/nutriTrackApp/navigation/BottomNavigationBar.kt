@@ -1,4 +1,4 @@
-package com.learningroots.osmanYuksel92351838.navigation
+package com.learningroots.nutriTrackApp.navigation
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -16,10 +16,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.size
-
-import com.learningroots.osmanYuksel92351838.R
-
-
+import com.learningroots.nutriTrackApp.R
 
 /**
  *

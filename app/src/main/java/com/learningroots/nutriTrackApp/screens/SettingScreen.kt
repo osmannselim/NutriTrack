@@ -1,4 +1,4 @@
-package com.learningroots.osmanYuksel92351838.screens
+package com.learningroots.nutriTrackApp.screens
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

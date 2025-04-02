@@ -1,6 +1,5 @@
-package com.learningroots.osmanYuksel92351838.screens
+package com.learningroots.nutriTrackApp.screens
 
-import com.learningroots.osmanYuksel92351838.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -10,8 +9,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.learningroots.osmanYuksel92351838.navigation.Screen
-
+import com.learningroots.nutriTrackApp.navigation.Screen
+import com.learningroots.nutriTrackApp.R
 @Composable
 fun WelcomeScreen(navController: NavController) {
     Column(

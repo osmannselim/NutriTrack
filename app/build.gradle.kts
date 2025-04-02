@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.learningroots.osmanYuksel92351838"
+    namespace = "com.learningroots.nutriTrackApp"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.learningroots.osmanYuksel92351838"
+        applicationId = "com.learningroots.nutriTrackApp"
         minSdk = 24
         targetSdk = 35
         versionCode = 1

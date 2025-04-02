@@ -1,7 +1,6 @@
-package com.learningroots.osmanYuksel92351838.screens
+package com.learningroots.nutriTrackApp.screens
 
-import com.learningroots.osmanYuksel92351838.utils.SharedPrefs
-import com.learningroots.osmanYuksel92351838.R
+import com.learningroots.nutriTrackApp.utils.SharedPrefs
 
 import android.app.TimePickerDialog
 import android.widget.TimePicker
@@ -16,14 +15,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.learningroots.osmanYuksel92351838.navigation.Screen
-import com.learningroots.osmanYuksel92351838.viewmodel.UserViewModel
+import com.learningroots.nutriTrackApp.navigation.Screen
+import com.learningroots.nutriTrackApp.viewmodel.UserViewModel
 import java.util.*
 import com.google.accompanist.flowlayout.FlowRow
 import android.content.Context
 import androidx.compose.runtime.LaunchedEffect
 import androidx.core.content.edit
-
+import com.learningroots.nutriTrackApp.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

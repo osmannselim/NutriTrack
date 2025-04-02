@@ -1,4 +1,4 @@
-package com.learningroots.osmanYuksel92351838
+package com.learningroots.nutriTrackApp
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -15,17 +15,17 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.createGraph
-import com.learningroots.osmanYuksel92351838.navigation.BottomNavigationBar
-import com.learningroots.osmanYuksel92351838.screens.NutriCoachScreen
-import com.learningroots.osmanYuksel92351838.screens.HomeScreen
-import com.learningroots.osmanYuksel92351838.screens.InsightsScreen
-import com.learningroots.osmanYuksel92351838.navigation.Screen
-import com.learningroots.osmanYuksel92351838.screens.LoginScreen
-import com.learningroots.osmanYuksel92351838.screens.QuestionnaireScreen
-import com.learningroots.osmanYuksel92351838.screens.SettingScreen
-import com.learningroots.osmanYuksel92351838.screens.WelcomeScreen
-import com.learningroots.osmanYuksel92351838.ui.theme.MyApplicationTheme
-import com.learningroots.osmanYuksel92351838.viewmodel.UserViewModel
+import com.learningroots.nutriTrackApp.navigation.BottomNavigationBar
+import com.learningroots.nutriTrackApp.screens.NutriCoachScreen
+import com.learningroots.nutriTrackApp.screens.HomeScreen
+import com.learningroots.nutriTrackApp.screens.InsightsScreen
+import com.learningroots.nutriTrackApp.navigation.Screen
+import com.learningroots.nutriTrackApp.screens.LoginScreen
+import com.learningroots.nutriTrackApp.screens.QuestionnaireScreen
+import com.learningroots.nutriTrackApp.screens.SettingScreen
+import com.learningroots.nutriTrackApp.screens.WelcomeScreen
+import com.learningroots.nutriTrackApp.ui.theme.MyApplicationTheme
+import com.learningroots.nutriTrackApp.viewmodel.UserViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

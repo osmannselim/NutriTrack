@@ -1,4 +1,4 @@
-package com.learningroots.osmanYuksel92351838.utils
+package com.learningroots.nutriTrackApp.utils
 
 import android.content.Context
 

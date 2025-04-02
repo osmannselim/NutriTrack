@@ -1,4 +1,4 @@
-package com.learningroots.osmanYuksel92351838.ui.theme
+package com.learningroots.nutriTrackApp.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

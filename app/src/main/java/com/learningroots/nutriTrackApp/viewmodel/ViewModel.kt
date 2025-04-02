@@ -1,7 +1,7 @@
-package com.learningroots.osmanYuksel92351838.viewmodel
+package com.learningroots.nutriTrackApp.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.learningroots.osmanYuksel92351838.utils.UserData
+import com.learningroots.nutriTrackApp.utils.UserData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 

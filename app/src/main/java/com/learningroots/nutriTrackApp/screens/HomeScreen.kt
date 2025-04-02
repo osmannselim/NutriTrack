@@ -1,13 +1,12 @@
-package com.learningroots.osmanYuksel92351838.screens
+package com.learningroots.nutriTrackApp.screens
 
-import com.learningroots.osmanYuksel92351838.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.learningroots.osmanYuksel92351838.viewmodel.UserViewModel
+import com.learningroots.nutriTrackApp.viewmodel.UserViewModel
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
@@ -16,13 +15,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.res.painterResource
-import com.learningroots.osmanYuksel92351838.navigation.Screen
+import com.learningroots.nutriTrackApp.navigation.Screen
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 
-
+import com.learningroots.nutriTrackApp.R
 @Composable
 fun HomeScreen(userViewModel: UserViewModel) {
     val user by userViewModel.user.collectAsState()

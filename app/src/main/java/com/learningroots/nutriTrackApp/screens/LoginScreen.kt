@@ -1,9 +1,9 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package com.learningroots.osmanYuksel92351838.screens
+package com.learningroots.nutriTrackApp.screens
 
 import androidx.compose.ui.platform.LocalContext
-import com.learningroots.osmanYuksel92351838.utils.loadUserDataFromCSV
+import com.learningroots.nutriTrackApp.utils.loadUserDataFromCSV
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -14,8 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.learningroots.osmanYuksel92351838.navigation.Screen
-import com.learningroots.osmanYuksel92351838.viewmodel.UserViewModel
+import com.learningroots.nutriTrackApp.navigation.Screen
+import com.learningroots.nutriTrackApp.viewmodel.UserViewModel
 
 @Composable
 fun LoginScreen(navController: NavController, userViewModel: UserViewModel) {

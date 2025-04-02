@@ -1,4 +1,4 @@
-package com.learningroots.osmanYuksel92351838.navigation
+package com.learningroots.nutriTrackApp.navigation
 
 /**
  * Author: Osman Yuksel
