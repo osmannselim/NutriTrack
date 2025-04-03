@@ -1,5 +1,6 @@
 package com.learningroots.nutriTrackApp.screens
 
+import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -11,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import com.learningroots.nutriTrackApp.viewmodel.UserViewModel
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.platform.LocalContext
 
 /**
  * Author: Osman Yuksel
@@ -42,6 +44,8 @@ fun InsightsScreen(userViewModel: UserViewModel) {
         )
 
         val totalScore = it.totalScore
+        val context = LocalContext.current
+
 
 //        Column(
 //            modifier = Modifier
@@ -138,9 +142,19 @@ fun InsightsScreen(userViewModel: UserViewModel) {
 
             Spacer(modifier = Modifier.height(2.dp))
 
-            // Buttons (not functional yet)
             Button(
-                onClick = { /* Not implemented yet */ },
+                onClick = {
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(
+                            Intent.EXTRA_TEXT,
+                            "My Food Quality Score is $totalScore out of 100! 🥦🍎 How's yours?"
+                        )
+                    }
+                    context.startActivity(
+                        Intent.createChooser(shareIntent, "Share your score via")
+                    )
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Share with someone")
