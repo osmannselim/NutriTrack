@@ -24,35 +24,27 @@ fun InsightsScreen(userViewModel: UserViewModel) {
     val user = userViewModel.user.collectAsState().value
 
     user?.let {
-        val isMale = it.sex.lowercase() == "male"
 
         // Select gender-specific scores
         val foodScores = listOf(
+            "Discretionary Foods" to it.discretionary,
             "Vegetables" to it.vegetables,
             "Fruits" to it.fruits,
             "Grains & Cereals" to it.grains,
             "Whole Grains" to it.wholeGrains,
             "Meat & Alternatives" to it.meat,
             "Dairy" to it.dairy,
-            "Water" to it.water,
-            "Saturated Fats" to it.saturatedFat,
-            "Unsaturated Fats" to it.unsaturatedFat,
             "Sodium" to it.sodium,
-            "Sugar" to it.sugar,
             "Alcohol" to it.alcohol,
-            "Discretionary Foods" to it.discretionary
+            "Water" to it.water,
+            "Sugar" to it.sugar,
+            "Saturated Fats" to it.saturatedFat,
+            "Unsaturated Fats" to it.unsaturatedFat
         )
 
         val totalScore = it.totalScore
         val context = LocalContext.current
 
-
-//        Column(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(24.dp),
-//            verticalArrangement = Arrangement.spacedBy(16.dp)
-//        )
         val scrollState = rememberScrollState()
 
         Column(
@@ -65,35 +57,8 @@ fun InsightsScreen(userViewModel: UserViewModel) {
         {
             Text("Insights: Food Score", style = MaterialTheme.typography.titleLarge)
 
-//            foodScores.forEach { (label, value) ->
-//                val maxScore = if (label in listOf("Water", "Alcohol")) 5f else 10f
-//                val progress = ((value / maxScore).coerceIn(0.0, 1.0)).toFloat()
-//
-//
-//                Column {
-//                    Row(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        horizontalArrangement = Arrangement.SpaceBetween
-//                    ) {
-//                        Text(label)
-//                        Text("${value.toInt()}/${maxScore.toInt()}")
-//                    }
-//
-//                    LinearProgressIndicator(
-//                        progress = { progress },
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .height(8.dp),
-////                        color = Color(0xFF9C27B0) // Purple
-//                        color = Color(0xFF0000FF) // Purple
-//
-//                    )
-//                }
-//            }
-
             foodScores.forEach { (label, value) ->
-                val maxScore = if (label in listOf("Water", "Alcohol")) 5f else 10f
-                val progress = ((value / maxScore).coerceIn(0.0, 1.0)).toFloat()
+                val progress = ((value / 10f).coerceIn(0.0, 1.0)).toFloat()
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -107,7 +72,7 @@ fun InsightsScreen(userViewModel: UserViewModel) {
                     )
 
                     LinearProgressIndicator(
-                        progress = { progress.toFloat() },
+                        progress = { progress },
                         modifier = Modifier
                             .weight(1f)
                             .height(8.dp),
@@ -116,7 +81,7 @@ fun InsightsScreen(userViewModel: UserViewModel) {
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    Text("${value.toInt()}/${maxScore.toInt()}")
+                    Text(String.format("%.2f/10", value))
                 }
             }
 

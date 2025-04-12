@@ -4,9 +4,8 @@ import android.content.Context
 
 object SharedPrefs {
 
-    private const val PREFS_NAME = "QuestionnairePrefs"
-
     fun saveQuestionnaireData(
+        userId: String,
         context: Context,
         foodSelections: Map<String, Boolean>,
         selectedPersona: String,
@@ -14,7 +13,8 @@ object SharedPrefs {
         sleepTime: String,
         wakeTime: String
     ) {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences("QuestionnairePrefs_$userId", Context.MODE_PRIVATE) // Use user-specific name
+
         prefs.edit().apply {
             putString("persona", selectedPersona)
             putString("biggestMeal", biggestMealTime)
@@ -25,7 +25,4 @@ object SharedPrefs {
         }
     }
 
-    fun getSelectedPersona(context: Context): String =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getString("persona", "") ?: ""
 }

@@ -16,16 +16,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.res.painterResource
 import com.learningroots.nutriTrackApp.navigation.Screen
-import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.navigation.NavController
 
 import com.learningroots.nutriTrackApp.R
+
+// lesson learned:
+// You need to ensure that the NavController instance created in your MainScreen
+// (where you set up the NavHost) is the same instance that you use in
+// your HomeScreen to navigate. You can achieve this by passing the navController
+// as a parameter to your HomeScreen composable.
+
 @Composable
-fun HomeScreen(userViewModel: UserViewModel) {
+fun HomeScreen(userViewModel: UserViewModel, navController: NavController) {
     val user by userViewModel.user.collectAsState()
-    val navController = rememberNavController()
 
     user?.let {
         val score = it.totalScore
@@ -59,14 +65,18 @@ fun HomeScreen(userViewModel: UserViewModel) {
                 }
 
                 Button(
-                    onClick = { navController.navigate(Screen.Questionnaire.route) },
+                    onClick = {
+                        navController.navigate(Screen.Questionnaire.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
                     modifier = Modifier.padding(start = 4.dp)
                 ) {
                     Text("Edit", maxLines = 1)
                 }
             }
-
 
             Image(
                 painter = painterResource(id = R.drawable.veggies_no_background),
@@ -87,7 +97,7 @@ fun HomeScreen(userViewModel: UserViewModel) {
             ) {
                 Text("Your Food Quality score", style = MaterialTheme.typography.bodyLarge)
                 Text(
-                    "${score.toInt()}/100",
+                    "$score/100",
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color(0xFF4CAF50) // Green
                 )

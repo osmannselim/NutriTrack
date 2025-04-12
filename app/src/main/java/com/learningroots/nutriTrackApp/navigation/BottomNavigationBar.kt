@@ -16,7 +16,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.size
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.learningroots.nutriTrackApp.R
+import androidx.compose.runtime.getValue
+import androidx.navigation.NavGraph.Companion.findStartDestination
 
 /**
  *
@@ -30,9 +33,6 @@ import com.learningroots.nutriTrackApp.R
 fun BottomNavigationBar(
     navController: NavController
 ) {
-    val selectedNavigationIndex = rememberSaveable {
-        mutableIntStateOf(0)
-    }
 
     val navigationItems = listOf(
         NavigationItem(
@@ -83,17 +83,30 @@ fun BottomNavigationBar(
         )
     )
 
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+
+    val currentRoute = navBackStackEntry?.destination?.route
 
     NavigationBar(
         containerColor = Color.White
     ) {
         navigationItems.forEachIndexed { index, item ->
             NavigationBarItem(
-                selected = selectedNavigationIndex.intValue == index,
+                selected = currentRoute == item.route,
                 onClick = {
-                    selectedNavigationIndex.intValue = index
-                    // current route  and backstackentry
-                    navController.navigate(item.route)
+                    if (currentRoute != item.route) {
+                        navController.navigate(item.route) {
+                            // Pop up to the start destination of the graph to avoid building up a large
+                            // stack of destinations on the back stack as users select items
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true // Save state of screens being popped
+                            }
+                            // Avoid multiple copies of the same destination when reselecting the same item
+                            launchSingleTop = true
+                            // Restore state when reselecting a previously selected item
+                            restoreState = true // Needs saveState=true in popUpTo to work effectively
+                        }
+                    }
                 },
                 icon = {
                     item.icon()
@@ -101,7 +114,7 @@ fun BottomNavigationBar(
                 label = {
                     Text(
                         item.title,
-                        color = if (index == selectedNavigationIndex.intValue)
+                        color = if (currentRoute == item.route)
                             Color.Black
                         else Color.Gray
                     )

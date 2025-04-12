@@ -36,13 +36,17 @@ fun WelcomeScreen(navController: NavController) {
 
         // Disclaimer text
         Text(
-            text = "This app provides general health and nutrition information for educational purposes only. It is not intended as medical advice, diagnosis, or treatment. Always consult a qualified healthcare professional before making any changes to your diet, exercise, or health regimen. Use this app at your own risk.",
+            text = "This app provides general health and nutrition information for educational purposes only. It is not intended as medical advice, diagnosis, or treatment. Always consult a qualified healthcare professional before making any changes to your diet, exercise, or health regimen. Use this app at your own risk. \n" +
+                    "If you’d like to an Accredited Practicing Dietitian (APD), please visit the Monash Nutrition/Dietetics Clinic (discounted rates for students):\n" +
+                    "https://www.monash.edu/medicine/scs/nutrition/clinics/nutrition",
             style = MaterialTheme.typography.bodyMedium
         )
 
         // Login button
         Button(
-            onClick = { navController.navigate(Screen.Login.route) },
+            onClick = {
+                navController.navigate(Screen.Login.route)
+                      },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Login")

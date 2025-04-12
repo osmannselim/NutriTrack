@@ -1,14 +1,15 @@
 package com.learningroots.nutriTrackApp
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -27,28 +28,77 @@ import com.learningroots.nutriTrackApp.screens.WelcomeScreen
 import com.learningroots.nutriTrackApp.ui.theme.MyApplicationTheme
 import com.learningroots.nutriTrackApp.viewmodel.UserViewModel
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
+//import androidx.compose.runtime.remember
+//import android.app.Activity
+//import androidx.compose.ui.platform.LocalContext
+//
+//
+//import androidx.navigation.NavController
+//import androidx.navigation.NavDestination
+//import androidx.fragment.app.Fragment
+//import androidx.navigation.fragment.findNavController
+
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
             MyApplicationTheme {
-                MainScreen()
+                val userViewModel: UserViewModel = viewModel()
+                val user by userViewModel.user.collectAsState()
+                val context = LocalContext.current
+
+                val startDestination = remember(user) {
+                    if (user == null) {
+                        Screen.Welcome.route // Or Screen.Login.route if that's your actual starting point
+                    } else {
+                        val prefs = context.getSharedPreferences("QuestionnairePrefs_${user!!.userId}", Context.MODE_PRIVATE)
+                        val hasQuestionnaireSaved = prefs.getBoolean("hasQuestionnaireSaved", false)
+                        if (hasQuestionnaireSaved) {
+                            Screen.Home.route
+                        } else {
+                            Screen.Questionnaire.route
+                        }
+                    }
+                }
+
+                MainScreen(userViewModel = userViewModel, onFinishedActivity = { finish() }, startDestination = startDestination)
             }
         }
     }
 }
 
-
 @Composable
-fun MainScreen() {
-
-    val userViewModel = remember { UserViewModel() }
-
+fun MainScreen(userViewModel: UserViewModel, onFinishedActivity: () -> Unit, startDestination: String) {
     val navController = rememberNavController()
 
-    val navBackStackEntry = navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry.value?.destination?.route
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    if (currentRoute in bottomBarScreens) {
+        BackHandler(enabled = true) {
+            if (currentRoute != Screen.Home.route) {
+                navController.navigate(Screen.Home.route) {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            } else {
+                onFinishedActivity()
+            }
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -58,40 +108,33 @@ fun MainScreen() {
             }
         }
     ) { innerPadding ->
-
-        val graph =
-            navController.createGraph(startDestination = Screen.Welcome.route) {
-
-                composable (route = Screen.Questionnaire.route) {
-                    QuestionnaireScreen(navController,userViewModel)
-                }
-
-                composable(route = Screen.Welcome.route) {
-                    WelcomeScreen(navController)
-                }
-                composable(route = Screen.Login.route) {
-                    LoginScreen(navController, userViewModel)
-                }
-
-                composable(route = Screen.NutriCoach.route) {
-                    NutriCoachScreen()
-                }
-                composable(route = Screen.Setting.route) {
-                    SettingScreen()
-                }
-                composable(route = Screen.Home.route) {
-                    HomeScreen(userViewModel)
-                }
-                composable(route = Screen.Insight.route) {
-                    InsightsScreen(userViewModel)
-                }
-            }
         NavHost(
             navController = navController,
-            graph = graph,
+            startDestination = startDestination, // Use the dynamic startDestination here
             modifier = Modifier.padding(innerPadding)
-        )
-
+        ) {
+            composable(route = Screen.Questionnaire.route) {
+                QuestionnaireScreen(navController, userViewModel)
+            }
+            composable(route = Screen.Welcome.route) {
+                WelcomeScreen(navController)
+            }
+            composable(route = Screen.Login.route) {
+                LoginScreen(navController, userViewModel)
+            }
+            composable(route = Screen.NutriCoach.route) {
+                NutriCoachScreen()
+            }
+            composable(route = Screen.Setting.route) {
+                SettingScreen()
+            }
+            composable(route = Screen.Home.route) {
+                HomeScreen(userViewModel, navController)
+            }
+            composable(route = Screen.Insight.route) {
+                InsightsScreen(userViewModel)
+            }
+        }
     }
 }
 
@@ -101,5 +144,3 @@ val bottomBarScreens = listOf(
     Screen.NutriCoach.route,
     Screen.Setting.route
 )
-
-

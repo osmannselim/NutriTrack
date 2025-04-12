@@ -1,5 +1,6 @@
 package com.learningroots.nutriTrackApp.screens
 
+import android.annotation.SuppressLint
 import com.learningroots.nutriTrackApp.utils.SharedPrefs
 
 import android.app.TimePickerDialog
@@ -28,15 +29,26 @@ import com.learningroots.nutriTrackApp.R
 @Composable
 fun QuestionnaireScreen(navController: NavController, userViewModel: UserViewModel) {
 
+    val user by userViewModel.user.collectAsState()
+
+    if (user == null) {
+        LaunchedEffect(Unit) {
+            navController.navigate(Screen.Login.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+        return
+    }
+
     val context = LocalContext.current
 
     val personaImageMap = mapOf(
-        "Health Devotee" to R.drawable.persona_1,
-        "Mindful Eater" to R.drawable.persona_2,
-        "Wellness Striver" to R.drawable.persona_3,
-        "Balance Seeker" to R.drawable.persona_4,
+        "Health Devotee"        to R.drawable.persona_1,
+        "Mindful Eater"         to R.drawable.persona_2,
+        "Wellness Striver"      to R.drawable.persona_3,
+        "Balance Seeker"        to R.drawable.persona_4,
         "Health Procrastinator" to R.drawable.persona_5,
-        "Food Carefree" to R.drawable.persona_6
+        "Food Carefree"         to R.drawable.persona_6
     )
 
     val personaList = listOf(
@@ -46,6 +58,15 @@ fun QuestionnaireScreen(navController: NavController, userViewModel: UserViewMod
         "Balance Seeker",
         "Health Procrastinator",
         "Food Carefree"
+    )
+
+    val personaDescriptionMap = mapOf(
+        "Health Devotee"        to "I’m passionate about healthy eating & health plays a big part in my life. I use social media to follow active lifestyle personalities or get new recipes/exercise ideas. I may even buy superfoods or follow a particular type of diet. I like to think I am super healthy.",
+        "Mindful Eater"         to "I’m health-conscious and being healthy and eating healthy is important to me. Although health means different things to different people, I make conscious lifestyle decisions about eating based on what I believe healthy means. I look for new recipes and healthy eating information on social media.",
+        "Wellness Striver"      to "I aspire to be healthy (but struggle sometimes). Healthy eating is hard work! I’ve tried to improve my diet, but always find things that make it difficult to stick with the changes. Sometimes I notice recipe ideas or healthy eating hacks, and if it seems easy enough, I’ll give it a go.",
+        "Balance Seeker"        to "I try and live a balanced lifestyle, and I think that all foods are okay in moderation. I shouldn’t have to feel guilty about eating a piece of cake now and again. I get all sorts of inspiration from social media like finding out about new restaurants, fun recipes and sometimes healthy eating tips.",
+        "Health Procrastinator" to "I’m contemplating healthy eating but it’s not a priority for me right now. I know the basics about what it means to be healthy, but it doesn’t seem relevant to me right now. I have taken a few steps to be healthier but I am not motivated to make it a high priority because I have too many other things going on in my life.",
+        "Food Carefree"         to "I’m not bothered about healthy eating. I don’t really see the point and I don’t think about it. I don’t really notice healthy eating tips or recipes and I don’t care what I eat."
     )
 
     val foodRows = listOf(
@@ -72,7 +93,8 @@ fun QuestionnaireScreen(navController: NavController, userViewModel: UserViewMod
         listOf("Balance Seeker", "Health Procrastinator", "Food Carefree")
     )
 
-    val prefs = context.getSharedPreferences("QuestionnairePrefs", Context.MODE_PRIVATE)
+//    val prefs = context.getSharedPreferences("QuestionnairePrefs", Context.MODE_PRIVATE)
+    val prefs = context.getSharedPreferences("QuestionnairePrefs_${user!!.userId}", Context.MODE_PRIVATE)
     val hasSaved = prefs.getBoolean("hasQuestionnaireSaved", false)
 
     LaunchedEffect(Unit) {
@@ -89,13 +111,13 @@ fun QuestionnaireScreen(navController: NavController, userViewModel: UserViewMod
         }
     }
 
-
+    @SuppressLint("DefaultLocale")
     fun showTimePicker(onTimeSelected: (String) -> Unit) {
         val calendar = Calendar.getInstance()
         TimePickerDialog(
             context,
             { _: TimePicker, hour: Int, minute: Int ->
-                onTimeSelected(String.format("%02d:%02d", hour, minute))
+                onTimeSelected(String.format("%02d:%02d", hour, minute) )
             },
             calendar.get(Calendar.HOUR_OF_DAY),
             calendar.get(Calendar.MINUTE),
@@ -117,12 +139,7 @@ fun QuestionnaireScreen(navController: NavController, userViewModel: UserViewMod
                 .padding(bottom = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.back),
-                    contentDescription = "Back"
-                )
-            }
+
             Text("Food Intake Questionnaire", style = MaterialTheme.typography.titleLarge)
         }
 
@@ -224,7 +241,6 @@ fun QuestionnaireScreen(navController: NavController, userViewModel: UserViewMod
         Spacer(modifier = Modifier.height(16.dp))
 
         // Time Pickers
-        // Time pickers as OutlinedTextFields (example)
 
         Row(
             modifier = Modifier
@@ -276,6 +292,14 @@ fun QuestionnaireScreen(navController: NavController, userViewModel: UserViewMod
 
         Spacer(modifier = Modifier.height(24.dp))
 
+
+        val canSave = selectedOptions.values.any { it } &&
+                selectedPersona.isNotBlank() &&
+                biggestMealTime.isNotBlank() &&
+                sleepTime.isNotBlank() &&
+                wakeTime.isNotBlank()
+
+
         // "Save & Continue" button (centered)
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -286,15 +310,21 @@ fun QuestionnaireScreen(navController: NavController, userViewModel: UserViewMod
                 prefs.edit() { putBoolean("hasQuestionnaireSaved", true) }
 
                 SharedPrefs.saveQuestionnaireData(
+                    userId = user!!.userId,
                     context = context,
                     foodSelections = selectedOptions,
                     selectedPersona = selectedPersona,
                     biggestMealTime = biggestMealTime,
                     sleepTime = sleepTime,
-                    wakeTime = wakeTime
+                    wakeTime = wakeTime,
                 )
-                navController.navigate(Screen.Home.route)
-            }) {
+                navController.navigate(Screen.Home.route) {
+                    popUpTo(Screen.Questionnaire.route) { inclusive = true } // removes Questionnaire from back stack
+                }
+
+            },
+                enabled = canSave   // disable the button if user did not fill in the questionnaire
+            ) {
                 Text("Save & Continue")
             }
         }
@@ -318,7 +348,8 @@ fun QuestionnaireScreen(navController: NavController, userViewModel: UserViewMod
                             modifier = Modifier.size(160.dp)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("This persona typically eats like this: [Description for $modalPersona]")
+                        Text(personaDescriptionMap[modalPersona] ?: "No description available.")
+
                     }
                 }
             )

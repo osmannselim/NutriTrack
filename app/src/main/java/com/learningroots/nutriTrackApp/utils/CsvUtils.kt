@@ -24,7 +24,6 @@ data class UserData(
 )
 
 
-
 fun loadUserDataFromCSV(context: Context): List<UserData> {
     val inputStream = context.assets.open("users.csv")
     val reader = inputStream.bufferedReader()
@@ -55,7 +54,7 @@ fun loadUserDataFromCSV(context: Context): List<UserData> {
                         meat = get(36, 37),  // meat and alternatives
                         dairy = get(40, 41),  // diary and alternatives
                         sodium = get(43, 44),
-                        alcohol = get(45, 46),
+                        alcohol = get(46, 47),
                         water = get(49, 50),
                         sugar = get(54, 55),
                         saturatedFat = get(57,58),

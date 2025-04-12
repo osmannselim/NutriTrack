@@ -25,8 +25,6 @@ fun LoginScreen(navController: NavController, userViewModel: UserViewModel) {
     var selectedUserId by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
 
-//    val userIds = listOf("123456", "234567", "345678")   // dummy
-
     val context = LocalContext.current
     val userDataList = remember { loadUserDataFromCSV(context) }
     val userIds = userDataList.map { it.userId }
@@ -102,6 +100,7 @@ fun LoginScreen(navController: NavController, userViewModel: UserViewModel) {
                 if (matchedUser != null) {
                     errorMessage = null
                     userViewModel.setUser(matchedUser)
+
                     navController.navigate(Screen.Questionnaire.route)
 
                 } else {
@@ -124,5 +123,3 @@ fun LoginScreen(navController: NavController, userViewModel: UserViewModel) {
         }
     }
 }
-
-
