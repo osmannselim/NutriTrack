@@ -51,11 +51,5 @@ fun WelcomeScreen(navController: NavController) {
         ) {
             Text("Login")
         }
-
-        // Student Name + ID
-        Text(
-            text = "Osman Yuksel (92351838)",
-            style = MaterialTheme.typography.labelMedium
-        )
     }
 }
