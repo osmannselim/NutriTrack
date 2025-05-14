@@ -18,4 +18,7 @@ class Repository(
 
     suspend fun getTips(userId: String) = nutriCoachDao.getTipsForUser(userId)
     suspend fun saveTip(tip: NutriCoachTip) = nutriCoachDao.insert(tip)
+
+    suspend fun updatePatient(patient: Patient) = patientDao.update(patient)
+
 }

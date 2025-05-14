@@ -5,14 +5,25 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "patients")
 data class Patient(
+
+    val password: String? = null,
+
     @PrimaryKey val userId: String,
-    val phoneNumber: String,
-    val name: String,
-    val password: String,
+    val phoneNumber: String?,
     val sex: String,
 
-    val HEIFAtotalscore: Float,
-    val DiscretionaryHEIFAscore: Float,
-    val VegetablesHEIFAscore: Float,
-    val FruitHEIFAscore: Float,
+    val totalScore: Double,
+    val discretionary:Double,
+    val vegetables: Double,
+    val fruits: Double,
+    val grains: Double,
+    val wholeGrains: Double,
+    val meat: Double,
+    val dairy: Double,
+    val sodium: Double,
+    val alcohol: Double,
+    val water: Double,
+    val sugar: Double,
+    val saturatedFat: Double,
+    val unsaturatedFat: Double
 )

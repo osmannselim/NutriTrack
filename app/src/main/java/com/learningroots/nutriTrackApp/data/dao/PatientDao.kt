@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.learningroots.nutriTrackApp.data.entity.Patient
 
 @Dao
@@ -16,4 +17,10 @@ interface PatientDao {
 
     @Query("SELECT * FROM patients")
     suspend fun getAllPatients(): List<Patient>
+
+    @Query("UPDATE patients SET password = :newPass WHERE userId = :userId")
+    suspend fun updatePassword(userId: String, newPass: String)
+
+    @Update
+    suspend fun update(patient: Patient)
 }

@@ -31,7 +31,7 @@ import com.learningroots.nutriTrackApp.R
 
 @Composable
 fun HomeScreen(userViewModel: UserViewModel, navController: NavController) {
-    val user by userViewModel.user.collectAsState()
+    val user by userViewModel.patient.collectAsState()
 
     user?.let {
         val score = it.totalScore

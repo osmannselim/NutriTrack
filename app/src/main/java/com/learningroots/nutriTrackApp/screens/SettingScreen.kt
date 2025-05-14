@@ -8,11 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
-/**
- * Author: Santosh Yadav
- * Created on: 16-11-2024 12:43
- */
-
 @Composable
 fun SettingScreen() {
     Box(

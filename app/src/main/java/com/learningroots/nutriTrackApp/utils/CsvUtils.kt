@@ -1,34 +1,14 @@
 package com.learningroots.nutriTrackApp.utils
 
+import com.learningroots.nutriTrackApp.data.entity.Patient
+
 import android.content.Context
 
-
-data class UserData(
-    val userId: String,
-    val phoneNumber: String,
-    val sex: String,
-    val totalScore: Double,
-    val vegetables: Double,
-    val fruits: Double,
-    val grains: Double,
-    val wholeGrains: Double,
-    val meat: Double,
-    val dairy: Double,
-    val water: Double,
-    val saturatedFat: Double,
-    val unsaturatedFat: Double,
-    val sodium: Double,
-    val sugar: Double,
-    val alcohol: Double,
-    val discretionary: Double
-)
-
-
-fun loadUserDataFromCSV(context: Context): List<UserData> {
+fun loadPatientsFromCSV(context: Context): List<Patient> {
     val inputStream = context.assets.open("users.csv")
     val reader = inputStream.bufferedReader()
 
-    val result = mutableListOf<UserData>()
+    val patients = mutableListOf<Patient>()
     reader.useLines { lines ->
         lines.drop(1).forEach { line ->
             val tokens = line.split(",")
@@ -40,11 +20,14 @@ fun loadUserDataFromCSV(context: Context): List<UserData> {
                     tokens[if (isMale) maleIndex else femaleIndex].toDoubleOrNull() ?: 0.0
                 }
 
-                result.add(
-                    UserData(
+                patients.add(
+                    Patient(
+                        password = null,
+
                         userId = tokens[1].trim(),
                         phoneNumber = tokens[0].trim(),
                         sex = tokens[2].trim(),
+
                         totalScore = get(3, 4),
                         discretionary = get(5, 6),
                         vegetables = get(8, 9),
@@ -64,5 +47,5 @@ fun loadUserDataFromCSV(context: Context): List<UserData> {
             }
         }
     }
-    return result
+    return patients
 }

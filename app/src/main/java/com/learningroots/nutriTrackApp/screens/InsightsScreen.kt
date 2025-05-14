@@ -13,6 +13,8 @@ import com.learningroots.nutriTrackApp.viewmodel.UserViewModel
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavController
+import com.learningroots.nutriTrackApp.navigation.Screen
 
 /**
  * Author: Osman Yuksel
@@ -20,8 +22,8 @@ import androidx.compose.ui.platform.LocalContext
  */
 
 @Composable
-fun InsightsScreen(userViewModel: UserViewModel) {
-    val user = userViewModel.user.collectAsState().value
+fun InsightsScreen(navController: NavController, userViewModel: UserViewModel) {
+    val user = userViewModel.patient.collectAsState().value
 
     user?.let {
 
@@ -126,11 +128,14 @@ fun InsightsScreen(userViewModel: UserViewModel) {
             }
 
             Button(
-                onClick = { /* Not implemented yet */ },
+                onClick = {
+                    navController.navigate(Screen.NutriCoach.route)
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Improve my diet!")
             }
+
         }
     } ?: run {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

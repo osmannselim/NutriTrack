@@ -1,11 +1,26 @@
 package com.learningroots.nutriTrackApp
 
+import com.learningroots.nutriTrackApp.data.db.AppDatabase
+import com.learningroots.nutriTrackApp.navigation.BottomNavigationBar
+import com.learningroots.nutriTrackApp.screens.NutriCoachScreen
+import com.learningroots.nutriTrackApp.screens.HomeScreen
+import com.learningroots.nutriTrackApp.screens.InsightsScreen
+import com.learningroots.nutriTrackApp.navigation.Screen
+import com.learningroots.nutriTrackApp.screens.LoginScreen
+import com.learningroots.nutriTrackApp.screens.QuestionnaireScreen
+import com.learningroots.nutriTrackApp.screens.RegisterScreen
+import com.learningroots.nutriTrackApp.screens.SettingScreen
+import com.learningroots.nutriTrackApp.screens.WelcomeScreen
+import com.learningroots.nutriTrackApp.ui.theme.MyApplicationTheme
+import com.learningroots.nutriTrackApp.viewmodel.UserViewModel
+import com.learningroots.nutriTrackApp.data.repository.Repository
+import com.learningroots.nutriTrackApp.utils.loadPatientsFromCSV
+
 import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -15,53 +30,56 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.createGraph
-import com.learningroots.nutriTrackApp.navigation.BottomNavigationBar
-import com.learningroots.nutriTrackApp.screens.NutriCoachScreen
-import com.learningroots.nutriTrackApp.screens.HomeScreen
-import com.learningroots.nutriTrackApp.screens.InsightsScreen
-import com.learningroots.nutriTrackApp.navigation.Screen
-import com.learningroots.nutriTrackApp.screens.LoginScreen
-import com.learningroots.nutriTrackApp.screens.QuestionnaireScreen
-import com.learningroots.nutriTrackApp.screens.SettingScreen
-import com.learningroots.nutriTrackApp.screens.WelcomeScreen
-import com.learningroots.nutriTrackApp.ui.theme.MyApplicationTheme
-import com.learningroots.nutriTrackApp.viewmodel.UserViewModel
-
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
-//import androidx.compose.runtime.remember
-//import android.app.Activity
-//import androidx.compose.ui.platform.LocalContext
-//
-//
-//import androidx.navigation.NavController
-//import androidx.navigation.NavDestination
-//import androidx.fragment.app.Fragment
-//import androidx.navigation.fragment.findNavController
+import kotlinx.coroutines.launch
+import androidx.lifecycle.ViewModelProvider
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
 
+        val db = AppDatabase.getDatabase(applicationContext)
+
+        val prefs = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
+        val isFirstLaunch = prefs.getBoolean("firstLaunch", true)
+
+        if (isFirstLaunch) {
+            val patients = loadPatientsFromCSV(this)
+            lifecycleScope.launch {
+                db.patientDao().insertAll(patients)
+                prefs.edit().putBoolean("firstLaunch", false).apply()
+            }
+        }
+
+        enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
-                val userViewModel: UserViewModel = viewModel()
-                val user by userViewModel.user.collectAsState()
+
+                val repository = Repository(db.patientDao(), db.foodIntakeDao(), db.nutriCoachDao())
+                val userViewModel: UserViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        @Suppress("UNCHECKED_CAST")
+                        return UserViewModel(repository) as T
+                    }
+                })
+
+                val user by userViewModel.patient.collectAsState()
                 val context = LocalContext.current
 
                 val startDestination = remember(user) {
                     if (user == null) {
-                        Screen.Welcome.route // Or Screen.Login.route if that's your actual starting point
+                        Screen.Welcome.route
                     } else {
-                        val prefs = context.getSharedPreferences("QuestionnairePrefs_${user!!.userId}", Context.MODE_PRIVATE)
+                        val prefs = context.getSharedPreferences("QuestionnairePrefs_${user?.userId ?: ""}", Context.MODE_PRIVATE)
                         val hasQuestionnaireSaved = prefs.getBoolean("hasQuestionnaireSaved", false)
                         if (hasQuestionnaireSaved) {
                             Screen.Home.route
@@ -76,7 +94,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
 @Composable
 fun MainScreen(userViewModel: UserViewModel, onFinishedActivity: () -> Unit, startDestination: String) {
     val navController = rememberNavController()
@@ -110,7 +127,7 @@ fun MainScreen(userViewModel: UserViewModel, onFinishedActivity: () -> Unit, sta
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = startDestination, // Use the dynamic startDestination here
+            startDestination = startDestination,
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(route = Screen.Questionnaire.route) {
@@ -122,8 +139,11 @@ fun MainScreen(userViewModel: UserViewModel, onFinishedActivity: () -> Unit, sta
             composable(route = Screen.Login.route) {
                 LoginScreen(navController, userViewModel)
             }
+            composable(route = Screen.Register.route) {
+                RegisterScreen(navController, userViewModel)
+            }
             composable(route = Screen.NutriCoach.route) {
-                NutriCoachScreen()
+                NutriCoachScreen(userViewModel)
             }
             composable(route = Screen.Setting.route) {
                 SettingScreen()
@@ -132,7 +152,7 @@ fun MainScreen(userViewModel: UserViewModel, onFinishedActivity: () -> Unit, sta
                 HomeScreen(userViewModel, navController)
             }
             composable(route = Screen.Insight.route) {
-                InsightsScreen(userViewModel)
+                InsightsScreen(navController, userViewModel)
             }
         }
     }

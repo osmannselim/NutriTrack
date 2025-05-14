@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+
+    id("org.jetbrains.kotlin.kapt")
 }
 
 android {
@@ -70,5 +72,13 @@ dependencies {
     val room_version = "2.7.1"
 
     implementation("androidx.room:room-runtime:$room_version")
+    kapt("androidx.room:room-compiler:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
+
+    implementation("io.coil-kt.coil3:coil-compose:3.2.0")
+//    implementation("io.coil-kt.coil3:coil-network-okhttp:3.2.0") // Only available on Android/JVM.
+//    implementation("io.coil-kt.coil3:coil-network-ktor2:3.2.0")
+//    implementation("io.coil-kt.coil3:coil-network-ktor3:3.2.0")
+
 
 }

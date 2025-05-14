@@ -1,7 +1,6 @@
 package com.learningroots.nutriTrackApp.screens
 
 import android.annotation.SuppressLint
-import com.learningroots.nutriTrackApp.utils.SharedPrefs
 
 import android.app.TimePickerDialog
 import android.widget.TimePicker
@@ -20,16 +19,15 @@ import com.learningroots.nutriTrackApp.navigation.Screen
 import com.learningroots.nutriTrackApp.viewmodel.UserViewModel
 import java.util.*
 import com.google.accompanist.flowlayout.FlowRow
-import android.content.Context
 import androidx.compose.runtime.LaunchedEffect
-import androidx.core.content.edit
 import com.learningroots.nutriTrackApp.R
+import com.learningroots.nutriTrackApp.data.mapper.FoodIntakeMapper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuestionnaireScreen(navController: NavController, userViewModel: UserViewModel) {
 
-    val user by userViewModel.user.collectAsState()
+    val user by userViewModel.patient.collectAsState()
 
     if (user == null) {
         LaunchedEffect(Unit) {
@@ -93,23 +91,42 @@ fun QuestionnaireScreen(navController: NavController, userViewModel: UserViewMod
         listOf("Balance Seeker", "Health Procrastinator", "Food Carefree")
     )
 
-//    val prefs = context.getSharedPreferences("QuestionnairePrefs", Context.MODE_PRIVATE)
-    val prefs = context.getSharedPreferences("QuestionnairePrefs_${user!!.userId}", Context.MODE_PRIVATE)
-    val hasSaved = prefs.getBoolean("hasQuestionnaireSaved", false)
+//    val prefs = context.getSharedPreferences("QuestionnairePrefs_${user!!.userId}", Context.MODE_PRIVATE)
+//    val hasSaved = prefs.getBoolean("hasQuestionnaireSaved", false)
+
+
+
+//    LaunchedEffect(Unit) {
+//        if (hasSaved) {
+//            selectedPersona = prefs.getString("persona", "") ?: ""
+//            biggestMealTime = prefs.getString("biggestMeal", "") ?: ""
+//            sleepTime = prefs.getString("sleep", "") ?: ""
+//            wakeTime = prefs.getString("wake", "") ?: ""
+//
+//            val savedFoods = prefs.getStringSet("selectedFoods", emptySet()) ?: emptySet()
+//            savedFoods.forEach { food ->
+//                selectedOptions[food] = true
+//            }
+//        }
+//    }
 
     LaunchedEffect(Unit) {
-        if (hasSaved) {
-            selectedPersona = prefs.getString("persona", "") ?: ""
-            biggestMealTime = prefs.getString("biggestMeal", "") ?: ""
-            sleepTime = prefs.getString("sleep", "") ?: ""
-            wakeTime = prefs.getString("wake", "") ?: ""
-
-            val savedFoods = prefs.getStringSet("selectedFoods", emptySet()) ?: emptySet()
-            savedFoods.forEach { food ->
-                selectedOptions[food] = true
+        val user = userViewModel.patient.value
+        user?.let {
+            val savedIntake = userViewModel.getFoodIntakeForUser(it.userId)
+            savedIntake?.let { entity ->
+                val uiModel = FoodIntakeMapper.fromEntity(entity)
+                selectedPersona = uiModel.persona
+                biggestMealTime = uiModel.biggestMealTime
+                sleepTime = uiModel.sleepTime
+                wakeTime = uiModel.wakeTime
+                uiModel.selectedFoods.forEach { food ->
+                    selectedOptions[food] = true
+                }
             }
         }
     }
+
 
     @SuppressLint("DefaultLocale")
     fun showTimePicker(onTimeSelected: (String) -> Unit) {
@@ -307,21 +324,21 @@ fun QuestionnaireScreen(navController: NavController, userViewModel: UserViewMod
         ) {
             Button(onClick = {
 
-                prefs.edit() { putBoolean("hasQuestionnaireSaved", true) }
-
-                SharedPrefs.saveQuestionnaireData(
-                    userId = user!!.userId,
-                    context = context,
-                    foodSelections = selectedOptions,
-                    selectedPersona = selectedPersona,
-                    biggestMealTime = biggestMealTime,
-                    sleepTime = sleepTime,
-                    wakeTime = wakeTime,
-                )
-                navController.navigate(Screen.Home.route) {
-                    popUpTo(Screen.Questionnaire.route) { inclusive = true } // removes Questionnaire from back stack
+                val user = userViewModel.patient.value
+                if (user != null) {
+                    val intake = FoodIntakeMapper.toEntity(
+                        patientId = user.userId,
+                        persona = selectedPersona,
+                        biggestMealTime = biggestMealTime,
+                        sleepTime = sleepTime,
+                        wakeTime = wakeTime,
+                        selectedFoods = selectedOptions.filterValues { it }.keys
+                    )
+                    userViewModel.saveFoodIntake(intake)
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Questionnaire.route) { inclusive = true } // removes Questionnaire from back stack
+                    }
                 }
-
             },
                 enabled = canSave   // disable the button if user did not fill in the questionnaire
             ) {
