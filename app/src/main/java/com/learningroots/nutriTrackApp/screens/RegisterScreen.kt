@@ -23,6 +23,7 @@ import com.learningroots.nutriTrackApp.viewmodel.RegistrationError
 fun RegisterScreen(navController: NavController, userViewModel: UserViewModel) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var selectedUserId by remember { mutableStateOf("") }
+    var userName by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -37,7 +38,7 @@ fun RegisterScreen(navController: NavController, userViewModel: UserViewModel) {
     }
 
     fun validateInputs(): Boolean {
-        if (selectedUserId.isBlank() || phoneNumber.isBlank() || password.isBlank() || confirmPassword.isBlank()) {
+        if (selectedUserId.isBlank() || userName.isBlank() || phoneNumber.isBlank() || password.isBlank() || confirmPassword.isBlank()) {
             errorMessage = "Please fill in all fields"
             return false
         }
@@ -100,6 +101,23 @@ fun RegisterScreen(navController: NavController, userViewModel: UserViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+
+        TextField(
+            value = userName,
+            onValueChange = { input ->
+                // Only allow letters
+                if (input.all { it.isLetter() } || input.isEmpty()) {
+                    userName = input
+                }
+            },
+            label = { Text("Name(letters only)") },
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+
         // Phone Number Field
         TextField(
             value = phoneNumber,
@@ -109,7 +127,7 @@ fun RegisterScreen(navController: NavController, userViewModel: UserViewModel) {
                     phoneNumber = input
                 }
             },
-            label = { Text("Phone Number") },
+            label = { Text("Phone Number (digits only)") },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Phone),
             modifier = Modifier.fillMaxWidth(),
             isError = phoneNumber.isNotEmpty() && !isValidPhoneNumber(phoneNumber)
@@ -152,14 +170,11 @@ fun RegisterScreen(navController: NavController, userViewModel: UserViewModel) {
         Button(
             onClick = {
                 if (!validateInputs()) {
+                    println("burda patladi..")
                     return@Button
                 }
-                
-                println("The type of userID is: ${selectedUserId::class.simpleName}")
-                println("The type of phone no is: ${phoneNumber::class.simpleName}")
-                println("The type of password is: ${password::class.simpleName}")
 
-                userViewModel.register(selectedUserId, phoneNumber, password) { success, error ->
+                userViewModel.register(selectedUserId, userName, phoneNumber, password) { success, error ->
                     if (success) {
                         // After successful registration, attempt to log in
                         userViewModel.login(selectedUserId, phoneNumber, password) { loginSuccess, loginError, user ->

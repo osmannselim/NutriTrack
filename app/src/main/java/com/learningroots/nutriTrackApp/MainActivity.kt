@@ -15,6 +15,7 @@ import com.learningroots.nutriTrackApp.ui.theme.MyApplicationTheme
 import com.learningroots.nutriTrackApp.viewmodel.UserViewModel
 import com.learningroots.nutriTrackApp.data.repository.Repository
 import com.learningroots.nutriTrackApp.utils.loadPatientsFromCSV
+import com.learningroots.nutriTrackApp.data.network.GeminiApiService
 
 import android.content.Context
 import android.os.Bundle
@@ -41,6 +42,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import kotlinx.coroutines.launch
 import androidx.lifecycle.ViewModelProvider
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 
 class MainActivity : ComponentActivity() {
@@ -60,6 +63,13 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        val geminiRetrofit = Retrofit.Builder()
+            .baseUrl("https://generativelanguage.googleapis.com/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        val geminiApiService = geminiRetrofit.create(GeminiApiService::class.java)
+
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
@@ -67,8 +77,11 @@ class MainActivity : ComponentActivity() {
                 val repository = Repository(db.patientDao(), db.foodIntakeDao(), db.nutriCoachDao())
                 val userViewModel: UserViewModel = viewModel(factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        @Suppress("UNCHECKED_CAST")
-                        return UserViewModel(repository) as T
+                        if (modelClass.isAssignableFrom(UserViewModel::class.java)) {
+                            @Suppress("UNCHECKED_CAST")
+                            return UserViewModel(repository, geminiApiService) as T
+                        }
+                        throw IllegalArgumentException("Unknown ViewModel class")
                     }
                 })
 

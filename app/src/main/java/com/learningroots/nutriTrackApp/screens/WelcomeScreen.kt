@@ -42,6 +42,12 @@ fun WelcomeScreen(navController: NavController) {
             style = MaterialTheme.typography.bodyMedium
         )
 
+        Text(
+            text = "Osman Yuksel - 35921838",
+            style = MaterialTheme.typography.bodyLarge
+        )
+
+
         // Login button
         Button(
             onClick = {

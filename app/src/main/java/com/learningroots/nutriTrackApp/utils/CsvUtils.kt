@@ -23,6 +23,7 @@ fun loadPatientsFromCSV(context: Context): List<Patient> {
                 patients.add(
                     Patient(
                         password = null,
+                        userName = null,
 
                         userId = tokens[1].trim(),
                         phoneNumber = tokens[0].trim(),
