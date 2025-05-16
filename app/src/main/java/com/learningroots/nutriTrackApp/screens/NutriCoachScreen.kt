@@ -37,8 +37,6 @@ import coil3.request.crossfade
 @Composable
 fun NutriCoachScreen(userViewModel: UserViewModel) {
 
-    // val APIkey = "AIzaSyCN6rpOVsO6BG-HcZsbs_fK_6Kb-ajaZ4g" // API Key is handled in ViewModel via BuildConfig
-
     val context = LocalContext.current
     val user by userViewModel.patient.collectAsState()
     val fruitDetails by userViewModel.fruitDetails.collectAsState()
