@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.rememberCoroutineScope
 import coil3.request.crossfade
+import android.util.Log
 
 // Threshold for determining optimal fruit score. TODO: Replace with actual value from scoring guide.
 // const val FRUIT_SCORE_OPTIMAL_THRESHOLD = 7.5 // Will be replaced by ViewModel logic
@@ -119,6 +120,11 @@ fun NutriCoachScreen(userViewModel: UserViewModel) {
                         // Seeded for consistency per user, can use a different seed if preferred
                         .data("https://picsum.photos/seed/${currentUser.userId.hashCode()}/800/400") 
                         .crossfade(true)
+                        .listener(
+                            onError = { request, result ->
+                                Log.e("NutriCoachScreen", "Failed to load image from picsum.photos: ${result.throwable.localizedMessage}", result.throwable)
+                            }
+                        )
                         .build(),
                     contentDescription = "Random encouragement image",
                     modifier = Modifier.fillMaxWidth().height(200.dp).padding(vertical = 8.dp)

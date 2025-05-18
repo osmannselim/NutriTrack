@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.navigation.NavController
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.style.TextDecoration
 
 import com.learningroots.nutriTrackApp.R
 
@@ -87,7 +89,20 @@ fun HomeScreen(userViewModel: UserViewModel, navController: NavController) {
                     .padding(horizontal = 16.dp)
             )
 
-            Text("My Score", style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("My Score", style = MaterialTheme.typography.titleMedium)
+                TextButton(onClick = { navController.navigate(Screen.Insights.route) }) {
+                    Text(
+                        "See all scores >",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(4.dp))
 
             Row(

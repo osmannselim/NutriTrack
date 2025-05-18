@@ -7,7 +7,9 @@ import com.learningroots.nutriTrackApp.data.model.GeminiRequest
 import com.learningroots.nutriTrackApp.data.model.ContentEntry
 import com.learningroots.nutriTrackApp.data.model.TextPart
 import com.learningroots.nutriTrackApp.data.network.GeminiApiService
+import com.learningroots.nutriTrackApp.data.network.FruityViceApiService
 import com.learningroots.nutriTrackApp.BuildConfig // Import BuildConfig
+import com.learningroots.nutriTrackApp.data.model.GenerationConfig
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -16,6 +18,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import android.util.Log
+import com.learningroots.nutriTrackApp.screens.format
+import kotlinx.coroutines.flow.update
+import android.content.Context // Added
+import android.content.SharedPreferences // Added
 
 enum class RegistrationError {
     INVALID_USER,
@@ -33,13 +39,39 @@ enum class LoginError {
 // Add GeminiUiState here or ensure it's imported if in a separate file
 // sealed interface GeminiUiState { ... }
 
+data class AdminAnalytics(
+    val averageHeifaMale: Double? = null,
+    val averageHeifaFemale: Double? = null,
+    val genAiInsights: List<String>? = null,
+    val error: String? = null,
+    val isLoading: Boolean = false
+)
+
 class UserViewModel(
     private val repository: Repository,
-    private val geminiApiService: GeminiApiService // Added GeminiApiService
+    private val geminiApiService: GeminiApiService,
+    private val fruityViceApiService: FruityViceApiService,
+    private val applicationContext: Context // Added applicationContext
 ) : ViewModel() {
 
     private val _patient = MutableStateFlow<Patient?>(null)
     val patient: StateFlow<Patient?> = _patient
+
+    private val _isLoadingSession = MutableStateFlow(true) // Added
+    val isLoadingSession: StateFlow<Boolean> = _isLoadingSession // Added
+
+    private val prefs: SharedPreferences = // Added
+        applicationContext.getSharedPreferences("UserSessionPrefs", Context.MODE_PRIVATE) // Added
+
+    init { // Added init block
+        viewModelScope.launch {
+            val loggedInUserId = prefs.getString("LOGGED_IN_USER_ID", null)
+            if (loggedInUserId != null) {
+                loadPatient(loggedInUserId) // This already sets _patient
+            }
+            _isLoadingSession.value = false
+        }
+    }
 
     // State for fruit details
     private val _fruitDetails = MutableStateFlow<FruitData?>(null)
@@ -61,6 +93,10 @@ class UserViewModel(
     private val _geminiUiState = MutableStateFlow<GeminiUiState>(GeminiUiState.Initial)
     val geminiUiState: StateFlow<GeminiUiState> = _geminiUiState
 
+    // State for Admin Analytics
+    private val _adminAnalytics = MutableStateFlow(AdminAnalytics())
+    val adminAnalytics: StateFlow<AdminAnalytics> = _adminAnalytics
+
     fun toggleAllTipsModal(show: Boolean) {
         _showAllTipsModal.value = show
     }
@@ -73,7 +109,7 @@ class UserViewModel(
         return patient?.fruits ?: 0.0 >= 5.0 // Max HEIFA score for Fruits (serves)
     }
 
-    fun setPatient(patient: Patient) {
+    fun setPatient(patient: Patient?) {
         _patient.value = patient
     }
 
@@ -119,6 +155,11 @@ class UserViewModel(
             }
 
             _patient.value = patient
+            // Save logged-in user ID
+            with(prefs.edit()) { // Added
+                putString("LOGGED_IN_USER_ID", userId) // Added
+                apply() // Added
+            } // Added
             onResult(true, LoginError.NONE, patient)
         }
     }
@@ -144,6 +185,11 @@ class UserViewModel(
             val updatedPatient = existing.copy(password = password, userName = userName)
             repository.updatePatient(updatedPatient)
             _patient.value = updatedPatient
+            // Also log in the user by saving their ID after registration
+            with(prefs.edit()) { // Added
+                putString("LOGGED_IN_USER_ID", userId) // Added
+                apply() // Added
+            } // Added
             onResult(true, RegistrationError.NONE)
         }
     }
@@ -154,31 +200,31 @@ class UserViewModel(
      */
     fun getFruitDetails(fruitName: String) {
         viewModelScope.launch {
-            // Placeholder: Mock API call
-            if (fruitName.equals("banana", ignoreCase = true)) {
-                _fruitDetails.value = FruitData(
-                    name = "Banana",
-                    family = "Musaceae",
-                    calories = 96.0,
-                    fat = 0.2,
-                    sugar = 17.2,
-                    carbohydrates = 22.0,
-                    protein = 1.0,
-                    nutritions = mapOf("Potassium" to 0.422) // Example other nutrition
-                )
-            } else if (fruitName.equals("apple", ignoreCase = true)) {
-                _fruitDetails.value = FruitData(
-                    name = "Apple",
-                    family = "Rosaceae",
-                    calories = 95.0,
-                    fat = 0.3,
-                    sugar = 19.0,
-                    carbohydrates = 25.0,
-                    protein = 0.5,
-                    nutritions = mapOf("Vitamin C" to 0.014)
-                )
-            } else {
-                _fruitDetails.value = null // Fruit not found or error
+            _fruitDetails.value = null // Clear previous details
+            try {
+                val response = fruityViceApiService.getFruitByName(fruitName.trim())
+                if (response.isSuccessful && response.body() != null) {
+                    val fruityViceData = response.body()!!
+                    _fruitDetails.value = FruitData(
+                        name = fruityViceData.name ?: "Unknown Fruit",
+                        family = fruityViceData.family ?: "Unknown Family",
+                        // Assuming nutritions are per 100g by default from FruityVice
+                        calories = fruityViceData.nutritions?.calories ?: 0.0,
+                        fat = fruityViceData.nutritions?.fat ?: 0.0,
+                        sugar = fruityViceData.nutritions?.sugar ?: 0.0,
+                        carbohydrates = fruityViceData.nutritions?.carbohydrates ?: 0.0,
+                        protein = fruityViceData.nutritions?.protein ?: 0.0,
+                        nutritions = emptyMap() // FruityVice free tier doesn't provide detailed other nutritions
+                                                // If you have a paid tier or other source, map them here.
+                    )
+                } else {
+                    // Handle error or fruit not found
+                    Log.e("UserViewModel", "FruityVice API Error (${response.code()}): ${response.errorBody()?.string()}")
+                    _fruitDetails.value = null
+                }
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "FruityVice Network Error: ", e)
+                _fruitDetails.value = null
             }
         }
     }
@@ -290,7 +336,11 @@ Keep the tone supportive and avoid being judgmental. End with an uplifting note.
 """ // Ensure this multi-line string is correctly terminated
 
             try {
-                val request = GeminiRequest(contents = listOf(ContentEntry(parts = listOf(TextPart(text = promptText)))))
+                val generationConf = GenerationConfig(temperature = 0.7f)
+                val request = GeminiRequest(
+                    contents = listOf(ContentEntry(parts = listOf(TextPart(text = promptText)))),
+                    generationConfig = generationConf
+                )
                 val response = geminiApiService.generateContent(BuildConfig.GEMINI_API_KEY, request)
 
                 if (response.isSuccessful && response.body() != null) {
@@ -345,5 +395,156 @@ Keep the tone supportive and avoid being judgmental. End with an uplifting note.
     fun clearMotivationalMessage() {
         _motivationalMessage.value = null
         _geminiUiState.value = GeminiUiState.Initial // Reset Gemini state
+    }
+
+    fun logout() { // Added
+        viewModelScope.launch { // Added
+            with(prefs.edit()) { // Added
+                remove("LOGGED_IN_USER_ID") // Added
+                apply() // Added
+            } // Added
+            _patient.value = null // Added
+            // Optionally, clear other user-specific states here if needed
+            // e.g., _fruitDetails.value = null, _motivationalMessage.value = null, etc.
+        } // Added
+    } // Added
+
+    fun loadAverageHeifaScores() {
+        viewModelScope.launch {
+            // Start loading for scores part
+            _adminAnalytics.update {
+                it.copy(isLoading = true, error = null) // Indicate loading for scores, clear previous errors
+            }
+            try {
+                val allPatients = repository.getAllPatients()
+                if (allPatients.isEmpty()) {
+                    _adminAnalytics.update {
+                        it.copy(error = "No patient data found for scores.", isLoading = false)
+                    }
+                    return@launch
+                }
+
+                val malePatients = allPatients.filter { it.sex.equals("Male", ignoreCase = true) }
+                val femalePatients = allPatients.filter { it.sex.equals("Female", ignoreCase = true) }
+
+                val avgMaleScore = if (malePatients.isNotEmpty()) malePatients.map { it.totalScore }.average() else null
+                val avgFemaleScore = if (femalePatients.isNotEmpty()) femalePatients.map { it.totalScore }.average() else null
+
+                _adminAnalytics.update {
+                    it.copy(
+                        averageHeifaMale = avgMaleScore,
+                        averageHeifaFemale = avgFemaleScore,
+                        isLoading = false // Scores loaded
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error loading average HEIFA scores: ", e)
+                _adminAnalytics.update {
+                    it.copy(error = "Failed to load average scores: ${e.message}", isLoading = false)
+                }
+            }
+        }
+    }
+
+    fun generateAdminInsights() { // Renamed from loadAdminAnalytics
+        viewModelScope.launch(Dispatchers.IO) { // Keep IO for network
+            // Indicate loading for insights
+            _adminAnalytics.update { it.copy(isLoading = true, error = null, genAiInsights = null) } // Clear previous insights and errors
+
+            try {
+                // Fetch all patients again, or reuse if we stored them. For simplicity, re-fetching.
+                val allPatients = repository.getAllPatients()
+                if (allPatients.isEmpty()) {
+                    _adminAnalytics.update { it.copy(error = "No patient data for insights.", isLoading = false) }
+                    return@launch
+                }
+
+                // Scores are needed for the prompt context, recalculate or fetch from state
+                val malePatients = allPatients.filter { it.sex.equals("Male", ignoreCase = true) }
+                val femalePatients = allPatients.filter { it.sex.equals("Female", ignoreCase = true) }
+                val avgMaleScore = if (malePatients.isNotEmpty()) malePatients.map { it.totalScore }.average() else _adminAnalytics.value.averageHeifaMale
+                val avgFemaleScore = if (femalePatients.isNotEmpty()) femalePatients.map { it.totalScore }.average() else _adminAnalytics.value.averageHeifaFemale
+
+
+                // Prepare data for GenAI (summaryForGenAI and genAiPrompt remains the same)
+                val summaryForGenAI = """
+Overall Patient Count: ${allPatients.size}
+Male Patients: ${malePatients.size}, Average HEIFA Score: ${avgMaleScore?.format(1) ?: "N/A"}
+Female Patients: ${femalePatients.size}, Average HEIFA Score: ${avgFemaleScore?.format(1) ?: "N/A"}
+
+Additional data points (averages across all users):
+Fruits Score: ${allPatients.map { it.fruits }.average().format(1)}
+Vegetables Score: ${allPatients.map { it.vegetables }.average().format(1)}
+Grains Score: ${allPatients.map { it.grains }.average().format(1)}
+Whole Grains Score: ${allPatients.map { it.wholeGrains }.average().format(1)}
+Meat Score: ${allPatients.map { it.meat }.average().format(1)}
+Dairy Score: ${allPatients.map { it.dairy }.average().format(1)}
+Water Score: ${allPatients.map { it.water }.average().format(1)}
+Sodium Score (lower is better reflected in score): ${allPatients.map { it.sodium }.average().format(1)}
+Added Sugars Score (lower is better reflected in score): ${allPatients.map { it.sugar }.average().format(1)}
+Saturated Fat Score (lower is better reflected in score): ${allPatients.map { it.saturatedFat }.average().format(1)}
+Discretionary Foods Score (lower is better reflected in score): ${allPatients.map { it.discretionary }.average().format(1)}
+
+Consider potential correlations, like if users with high vegetable scores also tend to have high fruit scores, or if one gender group shows greater dietary variety or higher scores in specific categories.
+"""
+
+                val genAiPrompt = """
+As a data analyst for a nutrition app, review the following summary of user dietary scores.
+Based ONLY on the data provided below, please generate exactly 3 distinct, insightful, and concise observations or patterns.
+To ensure a diverse set of findings, try to provide insights that cover different aspects, for example:
+- One insight about an overall population trend (e.g., a common low-scoring food group, or a widely consumed item).
+- One insight about a potential correlation between different dietary scores or food group consumptions.
+- One insight comparing demographic groups (e.g., male vs. female performance on a specific dietary component or overall).
+
+Ensure the specific insights vary each time this function is called.
+Each insight must be a single sentence. Do not use markdown like bullet points. Separate each insight with a newline character.
+
+Data Summary:
+$summaryForGenAI
+
+Insights:
+"""
+                var insights: List<String>? = null
+                var genAiError: String? = null
+
+                try {
+                    // Increased temperature for more variability
+                    val generationConf = GenerationConfig(temperature = 0.8f, topK = 40, topP = 0.95f)
+                    val request = GeminiRequest(
+                        contents = listOf(ContentEntry(parts = listOf(TextPart(text = genAiPrompt)))),
+                        generationConfig = generationConf
+                    )
+                    val response = geminiApiService.generateContent(BuildConfig.GEMINI_API_KEY, request)
+                    if (response.isSuccessful && response.body() != null) {
+                        val generatedText = response.body()!!.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
+                        if (generatedText != null) {
+                            insights = generatedText.trim().split("\n").map { it.trim() }.filter { it.isNotEmpty() }.take(3)
+                        } else {
+                            genAiError = response.body()!!.error?.message ?: "Failed to extract insights from Gemini response."
+                            Log.e("UserViewModel", "Admin GenAI Error or empty content: $genAiError")
+                        }
+                    } else {
+                        genAiError = "Admin GenAI API Error (${response.code()}): ${response.errorBody()?.string() ?: "Unknown API error"}"
+                        Log.e("UserViewModel", genAiError)
+                    }
+                } catch (e: Exception) {
+                    genAiError = "Admin GenAI Network Error: ${e.message}"
+                    Log.e("UserViewModel", "Admin GenAI Network Error: ", e)
+                }
+
+                _adminAnalytics.update {
+                    it.copy(
+                        // Scores should already be there, no need to update them again unless fetched fresh
+                        genAiInsights = insights,
+                        error = genAiError ?: it.error, // Preserve score error if genAI is fine, or show genAI error
+                        isLoading = false // Insights loaded
+                    )
+                }
+
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error loading admin analytics (insights part): ", e)
+                _adminAnalytics.update { it.copy(error = "Failed to generate insights: ${e.message}", isLoading = false) }
+            }
+        }
     }
 }

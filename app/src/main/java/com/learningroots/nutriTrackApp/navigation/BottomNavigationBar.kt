@@ -6,8 +6,6 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 
@@ -55,7 +53,7 @@ fun BottomNavigationBar(
                     modifier = Modifier.size(41.dp)
                 )
             },
-            route = Screen.Insight.route
+            route = Screen.Insights.route
         ),
         NavigationItem(
             title = "NutriCoach",
@@ -79,7 +77,7 @@ fun BottomNavigationBar(
 
                 )
             },
-            route = Screen.Setting.route
+            route = Screen.Settings.route
         )
     )
 

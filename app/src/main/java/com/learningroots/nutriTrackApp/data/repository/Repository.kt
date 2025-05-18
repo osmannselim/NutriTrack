@@ -21,4 +21,7 @@ class Repository(
 
     suspend fun updatePatient(patient: Patient) = patientDao.update(patient)
 
+    suspend fun getAllPatients(): List<Patient> {
+        return patientDao.getAllPatients()
+    }
 }

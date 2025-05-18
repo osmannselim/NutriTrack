@@ -2,7 +2,8 @@ package com.learningroots.nutriTrackApp.data.model
 
 // Request Structures
 data class GeminiRequest(
-    val contents: List<ContentEntry>
+    val contents: List<ContentEntry>,
+    val generationConfig: GenerationConfig? = null
 )
 
 data class ContentEntry(
